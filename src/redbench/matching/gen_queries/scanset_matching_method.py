@@ -3,6 +3,8 @@ import random
 from collections import defaultdict
 from typing import Dict
 
+from tqdm import tqdm
+
 from matching.gen_queries.scanset_mapper import ScansetMapper
 from utils.load_and_preprocess_redset import get_scanset_from_redset_query
 
@@ -142,7 +144,7 @@ class ScansetMatchingMethod:
         hash_to_instance = dict()
         not_enough_instances = 0
         were_cached = 0
-        for redset_query in query_timeline:
+        for redset_query in tqdm(query_timeline):
             if (
                 redset_query["query_type"] != "select"
             ):  # Here we only map SELECT queries

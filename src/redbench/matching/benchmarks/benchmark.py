@@ -116,9 +116,12 @@ class Benchmark(ABC):
         self._load_table_ids()
 
     def _insert_table_ids(self):
-        stats_db_write = duckdb.connect(self.config.stats_db_filepath, read_only=False)
+        # Ensure stats_db is open as writable (reopen if needed)
+        if hasattr(self, "stats_db") and self.stats_db:
+            self.stats_db.close()
+        self.stats_db = duckdb.connect(self.config.stats_db_filepath, read_only=False)
 
-        stats_db_write.execute(
+        self.stats_db.execute(
             f"""
             CREATE OR REPLACE TABLE {self.benchmark_config.table_ids_table} (
                 table_name VARCHAR,
@@ -128,7 +131,7 @@ class Benchmark(ABC):
         )
         assert len(self.get_table_ids()) > 0, "No table IDs found."
         for table_name, table_id in self.get_table_ids().items():
-            stats_db_write.execute(
+            self.stats_db.execute(
                 f"""
                 INSERT INTO {self.benchmark_config.table_ids_table}
                 VALUES ('{table_name}', {table_id})
@@ -187,9 +190,12 @@ class Benchmark(ABC):
         return self.benchmark_config.id
 
     def _override_stats_table(self):
-        stats_db_write = duckdb.connect(self.config.stats_db_filepath, read_only=False)
+        # Close any existing (potentially read-only) connection and reopen as writable
+        if hasattr(self, "stats_db") and self.stats_db:
+            self.stats_db.close()
+        self.stats_db = duckdb.connect(self.config.stats_db_filepath, read_only=False)
 
-        stats_db_write.execute(
+        self.stats_db.execute(
             f"""
             CREATE OR REPLACE TABLE {self.benchmark_config.stats_table} (
                 filepath VARCHAR,

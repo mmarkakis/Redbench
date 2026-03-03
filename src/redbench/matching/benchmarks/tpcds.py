@@ -42,6 +42,14 @@ class TPCDSBenchmark(Benchmark):
             f"cd {self.output_dir} && git clone https://github.com/skander-krid/tpcds-kit.git"
         )
 
+        # Append something at line 59 of the makefile
+        to_append = " -Wno-error=implicit-int"
+        with open(f"{self.output_dir}/tpcds-kit/tools/makefile", "r") as file:
+            lines = file.readlines()
+        lines[58] = lines[58].rstrip() + to_append + "\n"
+        with open(f"{self.output_dir}/tpcds-kit/tools/makefile", "w") as file:
+            file.writelines(lines)
+
         os.system(f"cd {self.output_dir}/tpcds-kit/tools && make OS={target_os}")
         os.system(
             f"cd {self.output_dir}/tpcds-kit/tools && ./dsdgen -scale {self.benchmark_config.sf} -verbose"
